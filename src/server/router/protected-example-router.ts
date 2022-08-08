@@ -7,6 +7,12 @@ export const protectedExampleRouter = createProtectedRouter()
       return ctx.session;
     },
   })
+  .query("getRepos", {
+    async resolve({ ctx }) {
+      console.log(ctx);
+      return 1;
+    },
+  })
   .query("getSecretMessage", {
     resolve({ ctx }) {
       return "He who asks a question is a fool for five minutes; he who does not ask a question remains a fool forever.";
