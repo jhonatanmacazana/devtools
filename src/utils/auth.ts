@@ -10,6 +10,7 @@ export const nextAuthOptions: NextAuthOptions = {
     session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
+        session.user.username = user.username;
       }
       return session;
     },
@@ -20,6 +21,15 @@ export const nextAuthOptions: NextAuthOptions = {
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
       authorization: { params: { scope: "read:user user:email read:org repo" } },
+      profile: async (profile) => {
+        return {
+          id: profile.id.toString(),
+          username: profile.login,
+          name: profile.name ?? profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+        };
+      },
     }),
   ],
 };
