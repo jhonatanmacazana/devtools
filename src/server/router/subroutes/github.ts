@@ -1,11 +1,27 @@
 import { Octokit } from "@octokit/rest";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import { t } from "../trpc";
 import { protectedProcedure } from "../utils/protected-procedure";
 
-// Example router with queries that can only be hit if the user requesting is signed in
-export const protectedExampleRouter = t.router({
+export const githubRouter = t.router({
+  hello: t.procedure
+    .input(
+      z
+        .object({
+          text: z.string().nullish(),
+        })
+        .nullish()
+    )
+    .query(({ input }) => {
+      return {
+        greeting: `Hello ${input?.text ?? "world"}`,
+      };
+    }),
+  getAll: t.procedure.query(async ({ ctx }) => {
+    return await ctx.prisma.example.findMany();
+  }),
   getSession: protectedProcedure.query(({ ctx }) => {
     return ctx.session;
   }),
@@ -23,8 +39,8 @@ export const protectedExampleRouter = t.router({
     }
 
     const octokit = new Octokit({ auth: res.access_token });
-    const orgs = await octokit.rest.repos.listForAuthenticatedUser();
+    const repos = await octokit.rest.repos.listForAuthenticatedUser();
 
-    return orgs.data;
+    return repos.data;
   }),
 });

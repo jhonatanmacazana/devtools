@@ -1,11 +1,9 @@
 // src/server/router/index.ts
-import { exampleRouter } from "./subroutes/example";
-import { protectedExampleRouter } from "./subroutes/protected-example-router";
+import { githubRouter } from "./subroutes/github";
 import { t } from "./trpc";
 
 export const appRouter = t.router({
-  example: exampleRouter,
-  secret: protectedExampleRouter,
+  github: githubRouter,
 });
 
 // export type definition of API

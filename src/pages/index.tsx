@@ -5,7 +5,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "@/utils/trpc";
 
 const RepositoriesView = () => {
-  const repos = trpc.proxy.secret.getRepos.useQuery();
+  const repos = trpc.proxy.github.getRepos.useQuery();
   return (
     <div>
       Repositories view
@@ -73,7 +73,7 @@ const HomeContent = () => {
 };
 
 const Home: NextPage = () => {
-  const hello = trpc.useQuery(["example.hello", { text: "from tRPC" }]);
+  const hello = trpc.proxy.github.hello.useQuery({ text: "from tRPC" });
 
   return (
     <>
