@@ -5,7 +5,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "@/utils/trpc";
 
 const RepositoriesView = () => {
-  const repos = trpc.useQuery(["question.getRepos"]);
+  const repos = trpc.proxy.secret.getRepos.useQuery()
   return (
     <div>
       Repositories view
