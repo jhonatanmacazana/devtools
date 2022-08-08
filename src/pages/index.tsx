@@ -5,12 +5,21 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "@/utils/trpc";
 
 const RepositoriesView = () => {
-  const repos = trpc.proxy.secret.getRepos.useQuery()
+  const repos = trpc.proxy.secret.getRepos.useQuery();
   return (
     <div>
       Repositories view
       <div className="pt-6 text-2xl text-blue-500 flex justify-center items-center w-full">
-        {repos.data ? <p>{JSON.stringify(repos.data, null, 2)}</p> : <p>Loading..</p>}
+        {repos.data ? (
+          <div>
+            {repos.data.map((repo) => {
+              return <div key={repo.id}>{repo.full_name}</div>;
+            })}
+            {/* <p>{JSON.stringify(repos.data, null, 2)}</p> */}
+          </div>
+        ) : (
+          <p>Loading..</p>
+        )}
       </div>
     </div>
   );
