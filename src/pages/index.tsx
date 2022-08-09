@@ -1,21 +1,38 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { FaCog, FaGithub, FaSignOutAlt } from "react-icons/fa";
+import { formatRelative } from "date-fns";
 
+import { env } from "@/env/client.mjs";
 import { trpc } from "@/utils/trpc";
+import { Link } from "@/components/link";
 
 const RepositoriesView = () => {
   const repos = trpc.proxy.github.getRepos.useQuery();
   return (
-    <div>
-      Repositories view
-      <div className="pt-6 text-2xl text-blue-500 flex justify-center items-center w-full">
+    <div className="w-full px-4 py-4 shadow-lg">
+      <h2 className="text-xl font-semibold">Available Repositories</h2>
+      <div className="flex w-full items-center justify-center pt-6 text-lg">
         {repos.data ? (
-          <div>
+          <div className="flex w-full flex-wrap gap-2">
             {repos.data.map((repo) => {
-              return <div key={repo.id}>{repo.full_name}</div>;
+              return (
+                <div className="flex items-center gap-2 px-3 py-2 shadow " key={repo.id}>
+                  <span>{repo.full_name}</span>
+
+                  {repo.updated_at && (
+                    <span className="text-sm">
+                      Updated {formatRelative(new Date(repo.updated_at), new Date())}
+                    </span>
+                  )}
+
+                  <button className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400">
+                    Create PRs
+                  </button>
+                </div>
+              );
             })}
-            {/* <p>{JSON.stringify(repos.data, null, 2)}</p> */}
           </div>
         ) : (
           <p>Loading..</p>
@@ -28,11 +45,21 @@ const RepositoriesView = () => {
 const NavButtons = () => {
   return (
     <div className="flex gap-2">
+      <Link
+        className="ease flex items-center gap-2 rounded-md bg-green-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-green-500"
+        href={`https://github.com/settings/connections/applications/${env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`}
+        isExternal
+      >
+        <FaCog className="text-2xl" />
+        <span>Reconfigure repos access</span>
+      </Link>
+
       <button
         onClick={() => signOut()}
-        className="flex gap-2 rounded bg-gray-200 p-4 font-bold text-gray-800 hover:bg-gray-100"
+        className="ease flex items-center gap-2 rounded-md bg-red-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-red-500"
       >
-        Logout
+        <FaSignOutAlt className="text-2xl" />
+        <span>Logout</span>
       </button>
     </div>
   );
@@ -46,10 +73,12 @@ const HomeContent = () => {
       <div className="flex grow flex-col items-center justify-center">
         <div className="text-xl font-bold">Please log in below</div>
         <div className="p-4" />
+
         <button
           onClick={() => signIn("github")}
-          className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
+          className="ease flex items-center gap-4 rounded-md bg-gray-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-gray-500"
         >
+          <FaGithub className="text-2xl" />
           <span>Sign in with Github</span>
         </button>
       </div>
@@ -57,9 +86,9 @@ const HomeContent = () => {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between py-4 px-8 shadow">
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="flex w-full items-center justify-between py-4 px-8 shadow">
+        <h1 className="flex items-center gap-2 text-2xl font-semibold">
           {sesh.user?.image && (
             <img src={sesh.user?.image} alt="pro pic" className="w-16 rounded-full" />
           )}
@@ -67,14 +96,13 @@ const HomeContent = () => {
         </h1>
         <NavButtons />
       </div>
+
       <RepositoriesView />
     </div>
   );
 };
 
 const Home: NextPage = () => {
-  const hello = trpc.proxy.github.hello.useQuery({ text: "from tRPC" });
-
   return (
     <>
       <Head>
@@ -83,14 +111,10 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4">
-        <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
-          Create <span className="text-purple-300">T3</span> App
+      <main className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
+        <h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
+          Devtools
         </h1>
-        <p className="text-2xl text-gray-700">This stack uses:</p>
-        <div className="pt-6 text-2xl text-blue-500 flex justify-center items-center w-full">
-          {hello.data ? <p>{hello.data.greeting}</p> : <p>Loading..</p>}
-        </div>
 
         <HomeContent />
       </main>

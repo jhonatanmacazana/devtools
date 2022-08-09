@@ -18,7 +18,7 @@ export const nextAuthOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GithubProvider({
-      clientId: env.GITHUB_CLIENT_ID,
+      clientId: env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
       authorization: { params: { scope: "read:user user:email read:org repo" } },
       profile: async (profile) => {
