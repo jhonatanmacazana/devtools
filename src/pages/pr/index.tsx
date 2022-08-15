@@ -1,54 +1,51 @@
 import type { GetServerSidePropsContext, InferGetServerSidePropsType, NextPage } from "next";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
-import { formatRelative } from "date-fns";
 
 import { NavButtons } from "@/components/nav-buttons";
 import { SignIn } from "@/components/sign-in";
 import { getAuthSession } from "@/server/common/get-server-session";
-import { octokit } from "@/server/github/octokit";
 import { trpc } from "@/utils/trpc";
 import { Fragment } from "react";
 
 const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
   const repoData = trpc.proxy.github.getRepoData.useQuery({ owner, repo });
+
+  if (!repoData.data?.branches) return <p>Loading..</p>;
+
   return (
     <div className="w-full px-4 py-4 shadow-lg">
       <h2 className="text-xl font-semibold">Branches</h2>
       <div className="flex w-full items-center justify-center pt-6 text-lg">
-        {repoData.data?.branches ? (
-          <div className="flex w-full flex-col">
-            <div className="grid w-full grid-cols-2 gap-2">
-              {repoData.data.branches.map((branch) => {
-                return (
-                  <Fragment key={branch.commit.sha}>
-                    <div className="flex items-center gap-2 px-3 py-2 shadow ">
-                      <div className="flex items-center">
-                        <input
-                          id="default-checkbox"
-                          type="checkbox"
-                          value=""
-                          className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                        />
-                        <label
-                          htmlFor="default-checkbox"
-                          className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                        >
-                          {branch.name}
-                        </label>
-                      </div>
+        <div className="flex w-full flex-col gap-4">
+          <div className="grid w-full grid-cols-2 gap-x-2 gap-y-2">
+            {repoData.data.branches.map((branch) => {
+              return (
+                <Fragment key={branch.commit.sha}>
+                  <div className="flex items-center gap-2 px-3 py-2 shadow ">
+                    <div className="flex items-center">
+                      <input
+                        id="default-checkbox"
+                        type="checkbox"
+                        value=""
+                        className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+                      />
+                      <label
+                        htmlFor="default-checkbox"
+                        className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                      >
+                        {branch.name}
+                      </label>
                     </div>
-                  </Fragment>
-                );
-              })}
-            </div>
-            <button className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400">
-              Target PRs
-            </button>
+                  </div>
+                </Fragment>
+              );
+            })}
           </div>
-        ) : (
-          <p>Loading..</p>
-        )}
+          <button className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400">
+            Target PRs
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -107,18 +104,7 @@ export const getServerSideProps = async ({ query, req, res }: GetServerSideProps
     return { props: {}, notFound: true };
   }
 
-  const responseRepo = await octokit.rest.repos.get({
-    headers: { authorization: `token ${account?.access_token}` },
-    owner,
-    repo,
-  });
-
-  if (!responseRepo.data) {
-    console.error("Got no GitHub response");
-    return { props: {}, notFound: true };
-  }
-
-  return { props: { session: session, repo, owner, fullRepo: responseRepo.data } };
+  return { props: { session: session, repo, owner } };
 };
 
 const CreatePrPage: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (props) => {
