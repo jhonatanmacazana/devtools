@@ -1,14 +1,16 @@
-import type { NextPage } from "next";
+import type { GetServerSidePropsContext, NextPage } from "next";
 import Head from "next/head";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { FaCog, FaGithub, FaSignOutAlt } from "react-icons/fa";
+import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { formatRelative } from "date-fns";
 
-import { env } from "@/env/client.mjs";
+import { SignIn } from "@/components/sign-in";
+import { NavButtons } from "@/components/nav-buttons";
+import { getAuthSession } from "@/server/common/get-server-session";
 import { trpc } from "@/utils/trpc";
-import { Link } from "@/components/link";
 
 const RepositoriesView = () => {
+  const router = useRouter();
   const repos = trpc.proxy.github.getRepos.useQuery();
   return (
     <div className="w-full px-4 py-4 shadow-lg">
@@ -27,7 +29,10 @@ const RepositoriesView = () => {
                     </span>
                   )}
 
-                  <button className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400">
+                  <button
+                    className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400"
+                    onClick={() => router.push(`/pr?owner=${repo.owner.login}&repo=${repo.name}`)}
+                  >
                     Create PRs
                   </button>
                 </div>
@@ -42,47 +47,11 @@ const RepositoriesView = () => {
   );
 };
 
-const NavButtons = () => {
-  return (
-    <div className="flex gap-2">
-      <Link
-        className="ease flex items-center gap-2 rounded-md bg-green-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-green-500"
-        href={`https://github.com/settings/connections/applications/${env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`}
-        isExternal
-      >
-        <FaCog className="text-2xl" />
-        <span>Reconfigure repos access</span>
-      </Link>
-
-      <button
-        onClick={() => signOut()}
-        className="ease flex items-center gap-2 rounded-md bg-red-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-red-500"
-      >
-        <FaSignOutAlt className="text-2xl" />
-        <span>Logout</span>
-      </button>
-    </div>
-  );
-};
-
 const HomeContent = () => {
   const { data: sesh } = useSession();
 
   if (!sesh) {
-    return (
-      <div className="flex grow flex-col items-center justify-center">
-        <div className="text-xl font-bold">Please log in below</div>
-        <div className="p-4" />
-
-        <button
-          onClick={() => signIn("github")}
-          className="ease flex items-center gap-4 rounded-md bg-gray-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-gray-500"
-        >
-          <FaGithub className="text-2xl" />
-          <span>Sign in with Github</span>
-        </button>
-      </div>
-    );
+    return <SignIn />;
   }
 
   return (
@@ -120,6 +89,10 @@ const Home: NextPage = () => {
       </main>
     </>
   );
+};
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  return { props: { session: await getAuthSession(ctx) } };
 };
 
 export default Home;

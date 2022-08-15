@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { octokit } from "@/server/github/octokit";
@@ -35,5 +34,16 @@ export const githubRouter = t.router({
       });
 
       return repos.data;
+    }),
+  getRepoData: protectedProcedure
+    .input(z.object({ owner: z.string(), repo: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const repos = await octokit.rest.repos.listBranches({
+        headers: { authorization: `token ${ctx.session.accessToken}` },
+        owner: input.owner,
+        repo: input.repo,
+      });
+
+      return { branches: repos.data };
     }),
 });
