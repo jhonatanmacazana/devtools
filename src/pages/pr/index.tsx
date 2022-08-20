@@ -4,7 +4,11 @@ import type { GetServerSidePropsContext, InferGetServerSidePropsType, NextPage }
 import Head from "next/head";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
-import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
+import {
+  HiOutlineArrowNarrowLeft,
+  HiOutlineArrowNarrowUp,
+  HiOutlineArrowNarrowDown,
+} from "react-icons/hi";
 import { z } from "zod";
 
 import { Link } from "@/components/link";
@@ -152,6 +156,22 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                 >
                   {compareBranchData.status}
                 </span>
+
+                <div
+                  className="flex items-center gap-0.5"
+                  title={`Ahead by ${compareBranchData.ahead_by} commits`}
+                >
+                  <HiOutlineArrowNarrowUp width={8} />
+                  <span>{compareBranchData.ahead_by}</span>
+                </div>
+
+                <div
+                  className="flex items-center gap-0.5"
+                  title={`Behind by ${compareBranchData.behind_by} commits`}
+                >
+                  <HiOutlineArrowNarrowDown width={8} />
+                  <span>{compareBranchData.behind_by}</span>
+                </div>
               </Link>
             ))}
           </div>

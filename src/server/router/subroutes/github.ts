@@ -91,7 +91,7 @@ export const githubRouter = t.router({
         return {
           base,
           head,
-          url: r.data.url,
+          url: r.data.html_url,
           status: r.data.status,
           ahead_by: r.data.ahead_by,
           behind_by: r.data.behind_by,
