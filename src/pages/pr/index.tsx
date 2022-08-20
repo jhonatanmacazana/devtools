@@ -5,9 +5,10 @@ import Head from "next/head";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import {
+  HiOutlineArrowNarrowDown,
   HiOutlineArrowNarrowLeft,
   HiOutlineArrowNarrowUp,
-  HiOutlineArrowNarrowDown,
+  HiOutlineExternalLink,
 } from "react-icons/hi";
 import { z } from "zod";
 
@@ -136,15 +137,21 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
           <h3 className="text-xl font-semibold">Available to merge?</h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
             {compareBranchesResponse.data?.map((compareBranchData) => (
-              <Link
-                className="flex w-full items-center gap-2 px-3 py-2 shadow transition hover:bg-gray-100"
-                href={compareBranchData.url}
-                isExternal
+              <div
+                className="flex w-full items-center gap-2 px-3 py-2 shadow"
                 key={compareBranchData.url}
               >
-                <span>{compareBranchData.base}</span>
-                <HiOutlineArrowNarrowLeft width={10} />
-                <span>{compareBranchData.head}</span>
+                <Link
+                  className="flex items-center gap-2 px-3 py-2  transition hover:bg-gray-100"
+                  href={compareBranchData.url}
+                  isExternal
+                >
+                  <span>{compareBranchData.base}</span>
+                  <HiOutlineArrowNarrowLeft width={10} />
+                  <span>{compareBranchData.head}</span>
+                  <HiOutlineExternalLink className="self-start" width={10} />
+                </Link>
+
                 <span
                   className={clsx(
                     "rounded px-2 py-1 font-mono text-sm",
@@ -172,7 +179,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                   <HiOutlineArrowNarrowDown width={8} />
                   <span>{compareBranchData.behind_by}</span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>
