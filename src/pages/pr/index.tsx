@@ -34,6 +34,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
       ?.filter((tb) => tb.value)
       .map((tb) => tb.name) || null;
   const compareBranchesResponse = trpc.proxy.github.compareBranches.useQuery(
+    // @ts-ignore
     { owner, repo, base: baseBranch, heads: headBranches },
     {
       enabled:
@@ -45,6 +46,15 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
   );
 
   const onSubmit = (data: PrSchemaType) => console.log(data);
+
+  if (repoData.error)
+    return (
+      <div className="flex w-full flex-col py-8">
+        <h2 className="text-center text-2xl font-semibold text-red-500">There was an error</h2>
+
+        <p className="text-lg">{repoData.error.message}</p>
+      </div>
+    );
 
   if (!repoData.data) return <p>Loading..</p>;
 

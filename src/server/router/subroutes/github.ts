@@ -1,6 +1,8 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { octokit } from "@/server/github/octokit";
+import { aw } from "@/utils/aw";
 
 import { t } from "../trpc";
 import { protectedProcedure } from "../utils/protected-procedure";
@@ -38,11 +40,23 @@ export const githubRouter = t.router({
   getRepoData: protectedProcedure
     .input(z.object({ owner: z.string(), repo: z.string() }))
     .query(async ({ ctx, input }) => {
-      const repos = await octokit.rest.repos.listBranches({
-        headers: { authorization: `token ${ctx.session.accessToken}` },
-        owner: input.owner,
-        repo: input.repo,
-      });
+      const [repos, err] = await aw(
+        octokit.rest.repos.listBranches({
+          headers: { authorization: `token ${ctx.session.accessToken}` },
+          owner: input.owner,
+          repo: input.repo,
+        })
+      );
+
+      if (err) {
+        // @ts-ignore
+        const status = err?.response.status || err?.status || 500;
+        throw new TRPCError({
+          message: err.message || "Something bad just happened",
+          code: status === 403 ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR",
+          cause: err,
+        });
+      }
 
       return {
         branches: repos.data,
