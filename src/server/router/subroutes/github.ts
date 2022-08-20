@@ -44,6 +44,46 @@ export const githubRouter = t.router({
         repo: input.repo,
       });
 
-      return { branches: repos.data };
+      return {
+        branches: repos.data,
+        protectedBranches: repos.data.filter((branch) => branch.protected),
+      };
+    }),
+  compareBranches: protectedProcedure
+    .input(
+      z.object({
+        owner: z.string(),
+        repo: z.string(),
+        base: z.string(),
+        heads: z.array(z.string()).nonempty(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const responses = await Promise.all(
+        input.heads.map(async (head) =>
+          octokit.rest.repos.compareCommitsWithBasehead({
+            headers: { authorization: `token ${ctx.session.accessToken}` },
+            owner: input.owner,
+            repo: input.repo,
+            basehead: `${input.base}...${head}`,
+          })
+        )
+      );
+
+      return responses.map((r) => {
+        const baseHead = r.data.url.split("/").pop()?.split("...");
+        const base = baseHead?.[0];
+        const head = baseHead?.[1];
+        return {
+          base,
+          head,
+          url: r.data.url,
+          status: r.data.status,
+          ahead_by: r.data.ahead_by,
+          behind_by: r.data.behind_by,
+          total_commits: r.data.total_commits,
+          // commits: r.data.commits,
+        };
+      });
     }),
 });
