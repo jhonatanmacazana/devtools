@@ -165,7 +165,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                 </span>
 
                 <div
-                  className="flex items-center gap-0.5"
+                  className="flex items-center gap-0.5 rounded border border-solid border-gray-500 px-2 py-1 font-mono text-sm"
                   title={`Ahead by ${compareBranchData.ahead_by} commits`}
                 >
                   <HiOutlineArrowNarrowUp width={8} />
@@ -173,7 +173,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                 </div>
 
                 <div
-                  className="flex items-center gap-0.5"
+                  className="flex items-center gap-0.5 rounded border border-solid border-gray-500 px-2 py-1 font-mono text-sm"
                   title={`Behind by ${compareBranchData.behind_by} commits`}
                 >
                   <HiOutlineArrowNarrowDown width={8} />
