@@ -88,22 +88,20 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                   className="flex w-full items-center gap-2 px-3 py-2 shadow "
                   key={branch.commit.sha}
                 >
-                  <div className="flex items-center">
-                    <input
-                      {...register("baseBranch")}
-                      className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                      disabled={isLocked}
-                      id={id}
-                      type="radio"
-                      value={branch.name}
-                    />
-                    <label
-                      htmlFor={id}
-                      className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                    >
-                      {branch.name}
-                    </label>
-                  </div>
+                  <input
+                    {...register("baseBranch")}
+                    className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+                    disabled={isLocked}
+                    id={id}
+                    type="radio"
+                    value={branch.name}
+                  />
+                  <label
+                    htmlFor={id}
+                    className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                  >
+                    {branch.name}
+                  </label>
                 </div>
               );
             })}
@@ -208,6 +206,12 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
 
         <span>{isLocked ? "Unlock State" : "Lock State"}</span>
       </button>
+
+      <section className="w-full">
+        <h3 className="text-xl font-semibold">Title of the PR</h3>
+        <div>Title</div>
+        <div>Content</div>
+      </section>
 
       <button
         className="w-40 rounded bg-cyan-300 px-5 py-3 text-sm transition duration-300 hover:bg-cyan-400"
