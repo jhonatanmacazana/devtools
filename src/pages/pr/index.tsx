@@ -18,6 +18,7 @@ import { Link } from "@/components/link";
 import { NavButtons } from "@/components/nav-buttons";
 import { SignIn } from "@/components/sign-in";
 import { getAuthSession } from "@/server/common/get-server-session";
+import { prisma } from "@/server/db/client";
 import { trpc } from "@/utils/trpc";
 import { useState } from "react";
 
@@ -28,6 +29,8 @@ const prSchema = z.object({
     .refine((val) => val.some((item) => item.value), {
       message: "At least one target branch must be selected",
     }),
+  title: z.string(),
+  description: z.string(),
 });
 type PrSchemaType = z.infer<typeof prSchema>;
 
@@ -71,6 +74,9 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
     );
 
   if (!repoData.data) return <p>Loading..</p>;
+
+  const titleId = "title-id";
+  const descriptionId = "description-id";
 
   return (
     <form
@@ -209,7 +215,22 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
 
       <section className="w-full">
         <h3 className="text-xl font-semibold">Title of the PR</h3>
-        <div>Title</div>
+
+        <div className="flex w-full flex-col items-center gap-2 px-3 py-2 shadow ">
+          <label
+            htmlFor={titleId}
+            className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+          >
+            Title
+          </label>
+          <input
+            {...register("title")}
+            className="w-full rounded border-gray-300 bg-gray-100 px-2 py-1 text-blue-600 focus:ring-2 focus:ring-blue-500 "
+            disabled={!isLocked}
+            id={titleId}
+            type="text"
+          />
+        </div>
         <div>Content</div>
       </section>
 
