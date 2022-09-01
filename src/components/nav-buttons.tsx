@@ -14,7 +14,7 @@ export const NavButtons = () => {
         isExternal
       >
         <FaCog className="text-2xl" />
-        <span>Reconfigure repos access</span>
+        <span className="hidden md:block">Reconfigure repos access</span>
       </Link>
 
       <button
@@ -22,7 +22,7 @@ export const NavButtons = () => {
         className="ease flex items-center gap-2 rounded-md bg-red-400 px-4 py-3 font-medium text-white transition duration-300 hover:bg-red-500"
       >
         <FaSignOutAlt className="text-2xl" />
-        <span>Logout</span>
+        <span className="hidden md:block">Logout</span>
       </button>
     </div>
   );

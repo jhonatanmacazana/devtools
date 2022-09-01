@@ -9,6 +9,8 @@ import {
   HiOutlineArrowNarrowLeft,
   HiOutlineArrowNarrowUp,
   HiOutlineExternalLink,
+  HiLockClosed,
+  HiLockOpen,
 } from "react-icons/hi";
 import { z } from "zod";
 
@@ -17,6 +19,7 @@ import { NavButtons } from "@/components/nav-buttons";
 import { SignIn } from "@/components/sign-in";
 import { getAuthSession } from "@/server/common/get-server-session";
 import { trpc } from "@/utils/trpc";
+import { useState } from "react";
 
 const prSchema = z.object({
   baseBranch: z.string(),
@@ -29,15 +32,19 @@ const prSchema = z.object({
 type PrSchemaType = z.infer<typeof prSchema>;
 
 const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
+  const [isLocked, setIsLocked] = useState(false);
+
   const { handleSubmit, register, watch } = useForm<PrSchemaType>({
     resolver: zodResolver(prSchema),
   });
   const repoData = trpc.proxy.github.getRepoData.useQuery({ owner, repo });
+
   const baseBranch = watch("baseBranch");
   const headBranches =
     watch("targetBranches")
       ?.filter((tb) => tb.value)
       .map((tb) => tb.name) || null;
+
   const compareBranchesResponse = trpc.proxy.github.compareBranches.useQuery(
     // @ts-ignore
     { owner, repo, base: baseBranch, heads: headBranches },
@@ -51,6 +58,8 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
   );
 
   const onSubmit = (data: PrSchemaType) => console.log(data);
+
+  const isSubmitDisabled = true;
 
   if (repoData.error)
     return (
@@ -68,7 +77,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
       className="flex w-full flex-col items-center gap-4 p-4 shadow-lg"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <div className="grid w-full grid-cols-4 justify-around gap-8 lg:flex-row">
+      <div className="grid w-full grid-cols-1 justify-around gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <section className="col-span-1">
           <h3 className="text-xl font-semibold">Base Branch</h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
@@ -82,10 +91,11 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                   <div className="flex items-center">
                     <input
                       {...register("baseBranch")}
+                      className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+                      disabled={isLocked}
                       id={id}
                       type="radio"
                       value={branch.name}
-                      className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                     />
                     <label
                       htmlFor={id}
@@ -118,6 +128,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                   <input
                     {...register(`targetBranches.${idx}.value` as const)}
                     className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+                    disabled={isLocked}
                     id={htmlId}
                     type="checkbox"
                   />
@@ -133,7 +144,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
           </div>
         </section>
 
-        <section className="col-span-2">
+        <section className="col-span-1 md:col-span-2 lg:col-span-2">
           <h3 className="text-xl font-semibold">Available to merge?</h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
             {compareBranchesResponse.data?.map((compareBranchData) => (
@@ -186,10 +197,24 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
       </div>
 
       <button
-        className="w-32 rounded bg-cyan-300 px-5 py-3 text-sm transition duration-300 hover:bg-cyan-400"
+        className={clsx(
+          "flex w-40 items-center justify-center gap-x-1 rounded px-5 py-3 text-sm transition duration-300",
+          isLocked ? "bg-red-400 text-white hover:bg-red-500" : "bg-green-300 hover:bg-green-400"
+        )}
+        onClick={() => setIsLocked((x) => !x)}
+        type="button"
+      >
+        {isLocked ? <HiLockClosed /> : <HiLockOpen />}
+
+        <span>{isLocked ? "Unlock State" : "Lock State"}</span>
+      </button>
+
+      <button
+        className="w-40 rounded bg-cyan-300 px-5 py-3 text-sm transition duration-300 hover:bg-cyan-400"
+        disabled={isSubmitDisabled}
         type="submit"
       >
-        Target PRs
+        Submit PRs
       </button>
     </form>
   );
@@ -204,8 +229,8 @@ const CreatePrPageContent: React.FC<{ owner: string; repo: string }> = ({ owner,
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
-      <div className="flex w-full items-center justify-between py-4 px-8 shadow">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
+      <div className="flex w-full items-center justify-between py-4 px-2 shadow lg:px-6">
+        <h1 className="flex items-center gap-2 text-xl font-semibold lg:text-2xl">
           {sesh.user?.image && (
             <img src={sesh.user?.image} alt="pro pic" className="w-16 rounded-full" />
           )}
@@ -262,7 +287,7 @@ const CreatePrPage: NextPage<InferGetServerSidePropsType<typeof getServerSidePro
       </Head>
 
       <main className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
-        <h1 className="justify-between text-4xl font-extrabold leading-normal text-gray-700 md:text-5xl">
+        <h1 className="justify-between text-center text-3xl font-extrabold leading-normal text-gray-700 sm:text-4xl md:text-5xl">
           {fullRepo}
         </h1>
 

@@ -100,4 +100,26 @@ export const githubRouter = t.router({
         };
       });
     }),
+  createPRs: protectedProcedure
+    .input(
+      z.object({
+        owner: z.string(),
+        repo: z.string(),
+        base: z.string(),
+        heads: z.array(z.string()).nonempty(),
+        title: z.string(),
+        body: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      octokit.rest.pulls.create({
+        headers: { authorization: `token ${ctx.session.accessToken}` },
+        owner: input.owner,
+        repo: input.repo,
+        base: input.base,
+        head: input.heads[0],
+        title: input.title,
+        body: input.body,
+      });
+    }),
 });
