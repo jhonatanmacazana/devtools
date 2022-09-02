@@ -21,7 +21,7 @@ import { getAuthSession } from "@/server/common/get-server-session";
 import { prisma } from "@/server/db/client";
 import { trpc } from "@/utils/trpc";
 import { useState } from "react";
-import { CheckboxInput, TextareaInput, TextInput } from "@/components/inputs";
+import { CheckboxInput, RadioInput, TextareaInput, TextInput } from "@/components/inputs";
 
 const prSchema = z.object({
   sourceBranch: z.string(),
@@ -88,30 +88,15 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
             Source Branch
           </h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
-            {repoData.data.branches.map((branch) => {
-              const id = `radio-${branch.name}`;
-              return (
-                <div
-                  className="flex w-full items-center gap-2 px-3 py-2 shadow "
-                  key={branch.commit.sha}
-                >
-                  <input
-                    {...register("sourceBranch")}
-                    className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                    disabled={isLocked}
-                    id={id}
-                    type="radio"
-                    value={branch.name}
-                  />
-                  <label
-                    htmlFor={id}
-                    className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                  >
-                    {branch.name}
-                  </label>
-                </div>
-              );
-            })}
+            {repoData.data.branches.map((branch) => (
+              <RadioInput
+                disabled={!isLocked}
+                id={`radio-${branch.name}`}
+                key={branch.commit.sha}
+                label={branch.name}
+                registerReturn={register("sourceBranch")}
+              />
+            ))}
           </div>
         </section>
 
@@ -120,34 +105,16 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
             Target Branches
           </h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
-            {repoData.data.branches.map((branch, idx) => {
-              const htmlId = `checkbox-${branch.commit.sha}`;
-              return (
-                <div
-                  className="flex w-full items-center gap-2 px-3 py-2 shadow"
-                  key={branch.commit.sha}
-                >
-                  <input
-                    {...register(`targetBranches.${idx}.name` as const)}
-                    hidden
-                    value={branch.name}
-                  />
-                  <input
-                    {...register(`targetBranches.${idx}.value` as const)}
-                    className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                    disabled={isLocked}
-                    id={htmlId}
-                    type="checkbox"
-                  />
-                  <label
-                    className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                    htmlFor={htmlId}
-                  >
-                    {branch.name}
-                  </label>
-                </div>
-              );
-            })}
+            {repoData.data.branches.map((branch, idx) => (
+              <CheckboxInput
+                disabled={!isLocked}
+                id={`checkbox-${branch.commit.sha}`}
+                key={branch.commit.sha}
+                label={branch.name}
+                registerReturnName={register(`targetBranches.${idx}.name` as const)}
+                registerReturnValue={register(`targetBranches.${idx}.value` as const)}
+              />
+            ))}
           </div>
         </section>
 
@@ -241,18 +208,16 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
         <section className="col-span-1">
           <h3 className="text-xl font-semibold">Labels</h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
-            {repoData.data?.labels?.map((label, idx) => {
-              return (
-                <CheckboxInput
-                  disabled={!isLocked}
-                  id={`checkbox-${label.name}`}
-                  key={label.name}
-                  label={label.name}
-                  registerReturnName={register(`prLabels.${idx}.name` as const)}
-                  registerReturnValue={register(`prLabels.${idx}.value` as const)}
-                />
-              );
-            })}
+            {repoData.data?.labels?.map((label, idx) => (
+              <CheckboxInput
+                disabled={!isLocked}
+                id={`checkbox-${label.name}`}
+                key={label.name}
+                label={label.name}
+                registerReturnName={register(`prLabels.${idx}.name` as const)}
+                registerReturnValue={register(`prLabels.${idx}.value` as const)}
+              />
+            ))}
           </div>
         </section>
       </div>
