@@ -58,9 +58,28 @@ export const githubRouter = t.router({
         });
       }
 
+      const [labelsForRepo, err2] = await aw(
+        octokit.rest.issues.listLabelsForRepo({
+          headers: { authorization: `token ${ctx.session.accessToken}` },
+          owner: input.owner,
+          repo: input.repo,
+        })
+      );
+
+      if (err2) {
+        // @ts-ignore
+        const status = err2?.response.status || err2?.status || 500;
+        throw new TRPCError({
+          message: err2.message || "Something bad just happened",
+          code: status === 403 ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR",
+          cause: err2,
+        });
+      }
+
       return {
         branches: repos.data,
         protectedBranches: repos.data.filter((branch) => branch.protected),
+        labels: labelsForRepo.data,
       };
     }),
   compareBranches: protectedProcedure
@@ -68,18 +87,18 @@ export const githubRouter = t.router({
       z.object({
         owner: z.string(),
         repo: z.string(),
-        base: z.string(),
-        heads: z.array(z.string()).nonempty(),
+        source: z.string(),
+        targets: z.array(z.string()).nonempty(),
       })
     )
     .query(async ({ ctx, input }) => {
       const responses = await Promise.all(
-        input.heads.map(async (head) =>
+        input.targets.map(async (target) =>
           octokit.rest.repos.compareCommitsWithBasehead({
             headers: { authorization: `token ${ctx.session.accessToken}` },
             owner: input.owner,
             repo: input.repo,
-            basehead: `${input.base}...${head}`,
+            basehead: `${target}...${input.source}`,
           })
         )
       );
@@ -111,7 +130,7 @@ export const githubRouter = t.router({
         body: z.string(),
       })
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       octokit.rest.pulls.create({
         headers: { authorization: `token ${ctx.session.accessToken}` },
         owner: input.owner,

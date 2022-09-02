@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineArrowNarrowDown,
-  HiOutlineArrowNarrowLeft,
+  HiOutlineArrowNarrowRight,
   HiOutlineArrowNarrowUp,
   HiOutlineExternalLink,
   HiLockClosed,
@@ -21,14 +21,16 @@ import { getAuthSession } from "@/server/common/get-server-session";
 import { prisma } from "@/server/db/client";
 import { trpc } from "@/utils/trpc";
 import { useState } from "react";
+import { CheckboxInput, TextareaInput, TextInput } from "@/components/inputs";
 
 const prSchema = z.object({
-  baseBranch: z.string(),
+  sourceBranch: z.string(),
   targetBranches: z
     .array(z.object({ name: z.string(), value: z.boolean() }))
     .refine((val) => val.some((item) => item.value), {
       message: "At least one target branch must be selected",
     }),
+  prLabels: z.array(z.object({ name: z.string(), value: z.boolean() })),
   title: z.string(),
   description: z.string(),
 });
@@ -42,7 +44,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
   });
   const repoData = trpc.proxy.github.getRepoData.useQuery({ owner, repo });
 
-  const baseBranch = watch("baseBranch");
+  const sourceBranch = watch("sourceBranch");
   const headBranches =
     watch("targetBranches")
       ?.filter((tb) => tb.value)
@@ -50,13 +52,13 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
 
   const compareBranchesResponse = trpc.proxy.github.compareBranches.useQuery(
     // @ts-ignore
-    { owner, repo, base: baseBranch, heads: headBranches },
+    { owner, repo, source: sourceBranch, targets: headBranches },
     {
       enabled:
         Array.isArray(headBranches) &&
         headBranches.length > 0 &&
-        typeof baseBranch === "string" &&
-        baseBranch !== "",
+        typeof sourceBranch === "string" &&
+        sourceBranch !== "",
     }
   );
 
@@ -75,9 +77,6 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
 
   if (!repoData.data) return <p>Loading..</p>;
 
-  const titleId = "title-id";
-  const descriptionId = "description-id";
-
   return (
     <form
       className="flex w-full flex-col items-center gap-4 p-4 shadow-lg"
@@ -85,7 +84,9 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
     >
       <div className="grid w-full grid-cols-1 justify-around gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <section className="col-span-1">
-          <h3 className="text-xl font-semibold">Base Branch</h3>
+          <h3 className="text-xl font-semibold" title="Branch to be merged from">
+            Source Branch
+          </h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
             {repoData.data.branches.map((branch) => {
               const id = `radio-${branch.name}`;
@@ -95,7 +96,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                   key={branch.commit.sha}
                 >
                   <input
-                    {...register("baseBranch")}
+                    {...register("sourceBranch")}
                     className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                     disabled={isLocked}
                     id={id}
@@ -115,7 +116,9 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
         </section>
 
         <section className="col-span-1">
-          <h3 className="text-xl font-semibold">Target Branches</h3>
+          <h3 className="text-xl font-semibold" title="Branches to be merged to">
+            Target Branches
+          </h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
             {repoData.data.branches.map((branch, idx) => {
               const htmlId = `checkbox-${branch.commit.sha}`;
@@ -161,9 +164,9 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                   href={compareBranchData.url}
                   isExternal
                 >
-                  <span>{compareBranchData.base}</span>
-                  <HiOutlineArrowNarrowLeft width={10} />
                   <span>{compareBranchData.head}</span>
+                  <HiOutlineArrowNarrowRight width={10} />
+                  <span>{compareBranchData.base}</span>
                   <HiOutlineExternalLink className="self-start" width={10} />
                 </Link>
 
@@ -213,30 +216,49 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
         <span>{isLocked ? "Unlock State" : "Lock State"}</span>
       </button>
 
-      <section className="w-full">
-        <h3 className="text-xl font-semibold">Title of the PR</h3>
-
-        <div className="flex w-full flex-col items-center gap-2 px-3 py-2 shadow ">
-          <label
-            htmlFor={titleId}
-            className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-          >
-            Title
-          </label>
-          <input
-            {...register("title")}
-            className="w-full rounded border-gray-300 bg-gray-100 px-2 py-1 text-blue-600 focus:ring-2 focus:ring-blue-500 "
+      <div className="grid w-full grid-cols-3 gap-x-4">
+        <section className="col-span-2">
+          <TextInput
             disabled={!isLocked}
-            id={titleId}
+            id="title-id"
+            label="Title"
+            placeholder="Title of the PR"
+            registerReturn={register("title")}
             type="text"
           />
-        </div>
-        <div>Content</div>
-      </section>
 
+          <div className="pb-2" />
+
+          <TextareaInput
+            disabled={!isLocked}
+            id="content-id"
+            label="Content"
+            placeholder="Content"
+            registerReturn={register("description")}
+            type="text"
+          />
+        </section>
+        <section className="col-span-1">
+          <h3 className="text-xl font-semibold">Labels</h3>
+          <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
+            {repoData.data?.labels?.map((label, idx) => {
+              return (
+                <CheckboxInput
+                  disabled={!isLocked}
+                  id={`checkbox-${label.name}`}
+                  key={label.name}
+                  label={label.name}
+                  registerReturnName={register(`prLabels.${idx}.name` as const)}
+                  registerReturnValue={register(`prLabels.${idx}.value` as const)}
+                />
+              );
+            })}
+          </div>
+        </section>
+      </div>
       <button
         className="w-40 rounded bg-cyan-300 px-5 py-3 text-sm transition duration-300 hover:bg-cyan-400"
-        disabled={isSubmitDisabled}
+        // disabled={isSubmitDisabled}
         type="submit"
       >
         Submit PRs
