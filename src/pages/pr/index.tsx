@@ -96,6 +96,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                 key={branch.commit.sha}
                 label={branch.name}
                 registerReturn={register("sourceBranch")}
+                value={branch.name}
               />
             ))}
           </div>

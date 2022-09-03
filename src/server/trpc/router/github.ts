@@ -92,16 +92,28 @@ export const githubRouter = t.router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const responses = await Promise.all(
-        input.targets.map(async (target) =>
-          octokit.rest.repos.compareCommitsWithBasehead({
-            headers: { authorization: `token ${ctx.session.accessToken}` },
-            owner: input.owner,
-            repo: input.repo,
-            basehead: `${target}...${input.source}`,
-          })
+      const [responses, err] = await aw(
+        Promise.all(
+          input.targets.map(async (target) =>
+            octokit.rest.repos.compareCommitsWithBasehead({
+              headers: { authorization: `token ${ctx.session.accessToken}` },
+              owner: input.owner,
+              repo: input.repo,
+              basehead: `${target}...${input.source}`,
+            })
+          )
         )
       );
+
+      if (err) {
+        // @ts-ignore
+        const status = err?.response.status || err?.status || 500;
+        throw new TRPCError({
+          message: err.message || "Something bad just happened",
+          code: status === 403 ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR",
+          cause: err,
+        });
+      }
 
       return responses.map((r) => {
         const baseHead = r.data.url.split("/").pop()?.split("...");
