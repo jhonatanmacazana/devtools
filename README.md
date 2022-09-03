@@ -9,6 +9,10 @@ Devtools for interacting with the GitHub API.
 - [x] List branches
 - [x] Compare mergeable branches
 - [ ] Show tips on how to solve merge conflicts
-- [ ] Create PR for subset of mergeable branches (shared and specific attibutes like labels)
+- [x] List reviewers and labels (shared)
+- [ ] List reviewers and labels (specific per branch)
+- [ ] Create actual PRs for subset of mergeable branches
 - [ ] UI-UX
+- [ ] Change backend queries to consume the GraphQL GitHub API to reduce calls
+- [ ] Add logic with redis to prevent rate-limit from GitHub API
 - [ ] ?

@@ -156,6 +156,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
             {compareBranchesResponse.data?.map((compareBranchData) => (
               <div
                 className="flex w-full items-center gap-2 px-3 py-2 shadow"
+                // eslint-disable-next-line react/no-unknown-property
                 key={compareBranchData.url}
               >
                 <Link

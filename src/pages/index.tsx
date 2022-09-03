@@ -19,6 +19,7 @@ const RepositoriesView = () => {
         {repos.data ? (
           <div className="flex w-full flex-wrap gap-2">
             {repos.data.map((repo) => (
+              // eslint-disable-next-line react/no-unknown-property
               <div className="flex items-center gap-2 px-3 py-2 shadow" key={repo.id}>
                 <span>{repo.full_name}</span>
 
