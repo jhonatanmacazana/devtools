@@ -3,6 +3,7 @@ import clsx from "clsx";
 import type { GetServerSidePropsContext, InferGetServerSidePropsType, NextPage } from "next";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineArrowNarrowDown,
@@ -20,22 +21,41 @@ import { SignIn } from "@/components/sign-in";
 import { getAuthSession } from "@/server/common/get-server-session";
 import { prisma } from "@/server/db/client";
 import { trpc } from "@/utils/trpc";
-import { useState } from "react";
 import { CheckboxInput, RadioInput, TextareaInput, TextInput } from "@/components/inputs";
+
+const multipleValueParser = z.array(z.object({ name: z.string(), value: z.boolean().nullish() }));
+const multipleValueNonEmptyParser = multipleValueParser.refine(
+  (val) => val.some((item) => item.value),
+  { message: "At least one target branch must be selected" }
+);
+const multipleValueTransformer = multipleValueParser.transform((array) =>
+  array.filter((item) => item.value).map((item) => item.name)
+);
+const multipleValueNonEmptyTransformer = multipleValueNonEmptyParser.transform((array) =>
+  array.filter((item) => item.value).map((item) => item.name)
+);
+const nonEmptyArrayParser = z.array(z.string()).nonempty();
 
 const prSchema = z.object({
   sourceBranch: z.string(),
-  targetBranches: z
-    .array(z.object({ name: z.string(), value: z.boolean() }))
-    .refine((val) => val.some((item) => item.value), {
-      message: "At least one target branch must be selected",
-    }),
-  prLabels: z.array(z.object({ name: z.string(), value: z.boolean() })),
-  collaborators: z.array(z.object({ name: z.string(), value: z.boolean() })),
-  title: z.string(),
-  description: z.string(),
+  targetBranches: multipleValueNonEmptyParser,
+  prLabels: multipleValueParser,
+  prReviewers: multipleValueParser,
+  prTitle: z.string(),
+  prContent: z.string(),
 });
 type PrSchemaType = z.infer<typeof prSchema>;
+
+const isNonEmptyArray = (array: unknown) => Array.isArray(array) && array.length > 0;
+
+const parseNonEmptyArray = <T,>(array: T[]) => {
+  if (!isNonEmptyArray(array)) return null;
+  const first = multipleValueNonEmptyTransformer.safeParse(array);
+  if (!first.success) return null;
+  const second = nonEmptyArrayParser.safeParse(first.data);
+  if (!second.success) return null;
+  return second.data;
+};
 
 const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
   const [isLocked, setIsLocked] = useState(false);
@@ -43,27 +63,37 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
   const { handleSubmit, register, watch } = useForm<PrSchemaType>({
     resolver: zodResolver(prSchema),
   });
+
+  const { mutate: createPRs } = trpc.github.createPRs.useMutation();
   const repoData = trpc.github.getRepoData.useQuery({ owner, repo });
 
   const sourceBranch = watch("sourceBranch");
-  const headBranches =
-    watch("targetBranches")
-      ?.filter((tb) => tb.value)
-      .map((tb) => tb.name) || null;
+  const watchedTargetBranches = watch("targetBranches");
+  const targetBranches = parseNonEmptyArray(watchedTargetBranches);
 
   const compareBranchesResponse = trpc.github.compareBranches.useQuery(
-    // @ts-ignore
-    { owner, repo, source: sourceBranch, targets: headBranches },
+    { owner, repo, source: sourceBranch, targets: targetBranches! },
     {
       enabled:
-        Array.isArray(headBranches) &&
-        headBranches.length > 0 &&
-        typeof sourceBranch === "string" &&
-        sourceBranch !== "",
+        isNonEmptyArray(targetBranches) && typeof sourceBranch === "string" && sourceBranch !== "",
     }
   );
 
-  const onSubmit = (data: PrSchemaType) => console.log(data);
+  const onSubmit = (data: PrSchemaType) => {
+    createPRs({
+      content: data.prContent,
+      title: data.prTitle,
+      owner,
+      repo,
+      targets: nonEmptyArrayParser.parse(
+        multipleValueNonEmptyTransformer.parse(data.targetBranches)
+      ),
+      source: data.sourceBranch,
+      labels: multipleValueTransformer.parse(data.prLabels),
+      reviewers: multipleValueTransformer.parse(data.prReviewers),
+    });
+    console.log(data);
+  };
 
   const isSubmitDisabled = true;
 
@@ -192,7 +222,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
             id="title-id"
             label="Title"
             placeholder="Title of the PR"
-            registerReturn={register("title")}
+            registerReturn={register("prTitle")}
             type="text"
           />
 
@@ -203,7 +233,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
             id="content-id"
             label="Content"
             placeholder="Content"
-            registerReturn={register("description")}
+            registerReturn={register("prContent")}
             type="text"
           />
         </section>
@@ -217,8 +247,8 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
                 id={`checkbox-${collaborator.login}`}
                 key={collaborator.login}
                 label={collaborator.login ?? ""}
-                registerReturnName={register(`collaborators.${idx}.name` as const)}
-                registerReturnValue={register(`collaborators.${idx}.value` as const)}
+                registerReturnName={register(`prReviewers.${idx}.name` as const)}
+                registerReturnValue={register(`prReviewers.${idx}.value` as const)}
               />
             ))}
           </div>
