@@ -42,7 +42,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
   const { handleSubmit, register, watch } = useForm<PrSchemaType>({
     resolver: zodResolver(prSchema),
   });
-  const repoData = trpc.proxy.github.getRepoData.useQuery({ owner, repo });
+  const repoData = trpc.github.getRepoData.useQuery({ owner, repo });
 
   const sourceBranch = watch("sourceBranch");
   const headBranches =
@@ -50,7 +50,7 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
       ?.filter((tb) => tb.value)
       .map((tb) => tb.name) || null;
 
-  const compareBranchesResponse = trpc.proxy.github.compareBranches.useQuery(
+  const compareBranchesResponse = trpc.github.compareBranches.useQuery(
     // @ts-ignore
     { owner, repo, source: sourceBranch, targets: headBranches },
     {

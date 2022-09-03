@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 
 import { t } from "../trpc";
 
-export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const protectedMiddleware = t.middleware(async ({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
@@ -23,3 +23,5 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
     },
   });
 });
+
+export const protectedProcedure = t.procedure.use(protectedMiddleware);

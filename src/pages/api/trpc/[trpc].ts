@@ -1,10 +1,10 @@
 import { createNextApiHandler } from "@trpc/server/adapters/next";
 
-import { appRouter } from "@/server/router";
-import { createContext } from "@/server/router/trpc/context";
+import { createContext } from "@/server/trpc/context";
+import { appRouter } from "@/server/trpc/router";
 
 // export API handler
 export default createNextApiHandler({
   router: appRouter,
-  createContext: createContext,
+  createContext,
 });

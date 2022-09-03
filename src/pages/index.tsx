@@ -11,33 +11,31 @@ import { trpc } from "@/utils/trpc";
 
 const RepositoriesView = () => {
   const router = useRouter();
-  const repos = trpc.proxy.github.getRepos.useQuery();
+  const repos = trpc.github.getRepos.useQuery();
   return (
     <div className="w-full px-4 py-4 shadow-lg">
       <h2 className="text-xl font-semibold">Available Repositories</h2>
       <div className="flex w-full items-center justify-center pt-6 text-lg">
         {repos.data ? (
           <div className="flex w-full flex-wrap gap-2">
-            {repos.data.map((repo) => {
-              return (
-                <div className="flex items-center gap-2 px-3 py-2 shadow " key={repo.id}>
-                  <span>{repo.full_name}</span>
+            {repos.data.map((repo) => (
+              <div className="flex items-center gap-2 px-3 py-2 shadow" key={repo.id}>
+                <span>{repo.full_name}</span>
 
-                  {repo.updated_at && (
-                    <span className="text-sm">
-                      Updated {formatRelative(new Date(repo.updated_at), new Date())}
-                    </span>
-                  )}
+                {repo.updated_at && (
+                  <span className="text-sm">
+                    Updated {formatRelative(new Date(repo.updated_at), new Date())}
+                  </span>
+                )}
 
-                  <button
-                    className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400"
-                    onClick={() => router.push(`/pr?owner=${repo.owner.login}&repo=${repo.name}`)}
-                  >
-                    Create PRs
-                  </button>
-                </div>
-              );
-            })}
+                <button
+                  className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400"
+                  onClick={() => router.push(`/pr?owner=${repo.owner.login}&repo=${repo.name}`)}
+                >
+                  Create PRs
+                </button>
+              </div>
+            ))}
           </div>
         ) : (
           <p>Loading..</p>
