@@ -40,12 +40,26 @@ export const githubRouter = t.router({
   getRepoData: protectedProcedure
     .input(z.object({ owner: z.string(), repo: z.string() }))
     .query(async ({ ctx, input }) => {
-      const [repos, err] = await aw(
-        octokit.rest.repos.listBranches({
-          headers: { authorization: `token ${ctx.session.accessToken}` },
-          owner: input.owner,
-          repo: input.repo,
-        })
+      const [responses, err] = await aw(
+        Promise.all([
+          octokit.rest.repos.listBranches({
+            headers: { authorization: `token ${ctx.session.accessToken}` },
+            owner: input.owner,
+            repo: input.repo,
+          }),
+
+          octokit.rest.repos.listCollaborators({
+            headers: { authorization: `token ${ctx.session.accessToken}` },
+            owner: input.owner,
+            repo: input.repo,
+          }),
+
+          octokit.rest.issues.listLabelsForRepo({
+            headers: { authorization: `token ${ctx.session.accessToken}` },
+            owner: input.owner,
+            repo: input.repo,
+          }),
+        ])
       );
 
       if (err) {
@@ -57,29 +71,15 @@ export const githubRouter = t.router({
           cause: err,
         });
       }
-
-      const [labelsForRepo, err2] = await aw(
-        octokit.rest.issues.listLabelsForRepo({
-          headers: { authorization: `token ${ctx.session.accessToken}` },
-          owner: input.owner,
-          repo: input.repo,
-        })
-      );
-
-      if (err2) {
-        // @ts-ignore
-        const status = err2?.response.status || err2?.status || 500;
-        throw new TRPCError({
-          message: err2.message || "Something bad just happened",
-          code: status === 403 ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR",
-          cause: err2,
-        });
-      }
+      const branches = responses[0];
+      const collaborators = responses[1];
+      const labelsForRepo = responses[2];
 
       return {
-        branches: repos.data,
-        protectedBranches: repos.data.filter((branch) => branch.protected),
+        branches: branches.data,
+        protectedBranches: branches.data.filter((branch) => branch.protected),
         labels: labelsForRepo.data,
+        collaborators: collaborators.data,
       };
     }),
   compareBranches: protectedProcedure

@@ -31,6 +31,7 @@ const prSchema = z.object({
       message: "At least one target branch must be selected",
     }),
   prLabels: z.array(z.object({ name: z.string(), value: z.boolean() })),
+  collaborators: z.array(z.object({ name: z.string(), value: z.boolean() })),
   title: z.string(),
   description: z.string(),
 });
@@ -183,8 +184,8 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
         <span>{isLocked ? "Unlock State" : "Lock State"}</span>
       </button>
 
-      <div className="grid w-full grid-cols-3 gap-x-4">
-        <section className="col-span-2">
+      <div className="grid w-full grid-cols-5 gap-x-4">
+        <section className="col-span-3">
           <TextInput
             disabled={!isLocked}
             id="title-id"
@@ -205,6 +206,23 @@ const RepoActionSection: React.FC<{ owner: string; repo: string }> = ({ owner, r
             type="text"
           />
         </section>
+
+        <section className="col-span-1">
+          <h3 className="text-xl font-semibold">Assign reviewers</h3>
+          <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
+            {repoData.data?.collaborators?.map((collaborator, idx) => (
+              <CheckboxInput
+                disabled={!isLocked}
+                id={`checkbox-${collaborator.login}`}
+                key={collaborator.login}
+                label={collaborator.login ?? ""}
+                registerReturnName={register(`collaborators.${idx}.name` as const)}
+                registerReturnValue={register(`collaborators.${idx}.value` as const)}
+              />
+            ))}
+          </div>
+        </section>
+
         <section className="col-span-1">
           <h3 className="text-xl font-semibold">Labels</h3>
           <div className="flex flex-col items-center justify-center gap-2 pt-4 text-lg">
