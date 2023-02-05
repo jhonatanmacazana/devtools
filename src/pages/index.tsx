@@ -6,7 +6,7 @@ import { formatRelative } from "date-fns";
 
 import { SignIn } from "@/components/sign-in";
 import { NavButtons } from "@/components/nav-buttons";
-import { getAuthSession } from "@/server/common/get-server-session";
+import { getServerAuthSession } from "@/server/auth";
 import { trpc } from "@/utils/trpc";
 
 const RepositoriesView = () => {
@@ -91,7 +91,7 @@ const Home: NextPage = () => {
 };
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  return { props: { session: await getAuthSession(ctx) } };
+  return { props: { session: await getServerAuthSession(ctx) } };
 };
 
 export default Home;

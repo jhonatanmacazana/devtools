@@ -4,10 +4,9 @@ import { z } from "zod";
 import { octokit } from "@/server/github/octokit";
 import { aw } from "@/utils/aw";
 
-import { t } from "../trpc";
-import { protectedProcedure } from "../utils/protected-procedure";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-export const githubRouter = t.router({
+export const githubRouter = createTRPCRouter({
   getSession: protectedProcedure.query(({ ctx }) => {
     return ctx.session;
   }),

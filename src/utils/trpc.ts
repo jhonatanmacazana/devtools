@@ -1,29 +1,19 @@
-import { httpBatchLink } from "@trpc/client/links/httpBatchLink";
-import { loggerLink } from "@trpc/client/links/loggerLink";
-import { setupTRPC } from "@trpc/next";
-import type { inferProcedureInput, inferProcedureOutput } from "@trpc/server";
+import { httpBatchLink, loggerLink } from "@trpc/client";
+import { createTRPCNext } from "@trpc/next";
+import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
 
-import type { AppRouter } from "@/server/trpc/router";
+import { type AppRouter } from "@/server/api/root";
 
-function getBaseUrl() {
-  if (typeof window !== "undefined")
-    // browser should use relative path
-    return "";
-  if (process.env.VERCEL_URL)
-    // reference for vercel.com
-    return `https://${process.env.VERCEL_URL}`;
-  if (process.env.RENDER_INTERNAL_HOSTNAME)
-    // reference for render.com
-    return `http://${process.env.RENDER_INTERNAL_HOSTNAME}:${process.env.PORT}`;
-  // assume localhost
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-}
+const getBaseUrl = () => {
+  if (typeof window !== "undefined") return ""; // browser should use relative url
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
+  return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
+};
 
-export const trpc = setupTRPC<AppRouter>({
+/** A set of type-safe react-query hooks for your tRPC API. */
+export const trpc = createTRPCNext<AppRouter>({
   config() {
-    const url = `${getBaseUrl()}/api/trpc`;
-
     return {
       links: [
         loggerLink({
@@ -31,34 +21,31 @@ export const trpc = setupTRPC<AppRouter>({
             process.env.NODE_ENV === "development" ||
             (opts.direction === "down" && opts.result instanceof Error),
         }),
-        httpBatchLink({ url }),
+        httpBatchLink({
+          url: `${getBaseUrl()}/api/trpc`,
+        }),
       ],
-      url,
       transformer: superjson,
-      /**
-       * @link https://react-query.tanstack.com/reference/QueryClient
-       */
-      // queryClientConfig: { defaultOptions: { queries: { staleTime: 60 } } },
     };
   },
   /**
-   * @link https://trpc.io/docs/ssr
-   **/
+   * Whether tRPC should await queries when server rendering pages.
+   *
+   * @see https://trpc.io/docs/nextjs#ssr-boolean-default-false
+   */
   ssr: false,
 });
 
 /**
- * This is a helper method to infer the output of a query resolver
- * @example type HelloOutput = inferQueryOutput<'hello'>
- */
-export type inferQueryOutput<TRouteKey extends keyof AppRouter["_def"]["queries"]> =
-  inferProcedureOutput<AppRouter["_def"]["queries"][TRouteKey]>;
+ * Inference helper for inputs.
+ *
+ * @example type HelloInput = RouterInputs['example']['hello']
+ **/
+export type RouterInputs = inferRouterInputs<AppRouter>;
 
-export type inferQueryInput<TRouteKey extends keyof AppRouter["_def"]["queries"]> =
-  inferProcedureInput<AppRouter["_def"]["queries"][TRouteKey]>;
-
-export type inferMutationOutput<TRouteKey extends keyof AppRouter["_def"]["mutations"]> =
-  inferProcedureOutput<AppRouter["_def"]["mutations"][TRouteKey]>;
-
-export type inferMutationInput<TRouteKey extends keyof AppRouter["_def"]["mutations"]> =
-  inferProcedureInput<AppRouter["_def"]["mutations"][TRouteKey]>;
+/**
+ * Inference helper for outputs.
+ *
+ * @example type HelloOutput = RouterOutputs['example']['hello']
+ **/
+export type RouterOutputs = inferRouterOutputs<AppRouter>;

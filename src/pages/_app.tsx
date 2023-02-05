@@ -1,11 +1,15 @@
 import "@/styles/globals.css";
 
 import type { AppType } from "next/dist/shared/lib/utils";
+import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 
 import { trpc } from "@/utils/trpc";
 
-const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => {
+const MyApp: AppType<{ session: Session | null }> = ({
+  Component,
+  pageProps: { session, ...pageProps },
+}) => {
   return (
     <SessionProvider session={session}>
       <Component {...pageProps} />

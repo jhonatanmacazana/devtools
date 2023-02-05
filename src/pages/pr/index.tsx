@@ -18,8 +18,8 @@ import { z } from "zod";
 import { Link } from "@/components/link";
 import { NavButtons } from "@/components/nav-buttons";
 import { SignIn } from "@/components/sign-in";
-import { getAuthSession } from "@/server/common/get-server-session";
-import { prisma } from "@/server/db/client";
+import { getServerAuthSession } from "@/server/auth";
+import { prisma } from "@/server/db";
 import { trpc } from "@/utils/trpc";
 import { CheckboxInput, RadioInput, TextareaInput, TextInput } from "@/components/inputs";
 
@@ -320,7 +320,7 @@ export const getServerSideProps = async ({ query, req, res }: GetServerSideProps
 
   const { repo, owner } = query;
 
-  const session = await getAuthSession({ req, res });
+  const session = await getServerAuthSession({ req, res });
   if (!session) {
     console.error("Got no session");
     return { props: {}, notFound: true };
