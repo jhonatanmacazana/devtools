@@ -15,7 +15,13 @@
     },
     "build": {
       "dependsOn": ["^build", "^db:generate"],
-      "outputs": [".next/**"]
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "dev:test": {
+      "cache": false
+    },
+    "e2e:test": {
+      "dependsOn": ["^build"]
     },
     "lint": {},
     "clean": {

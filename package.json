@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "turbo dev --parallel",
     "build": "turbo build",
+    "ci": "turbo build e2e:test lint",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "type-check": "turbo type-check",
     "clean": "rm -rf node_modules",
     "clean:workspaces": "turbo clean",
     "db:generate": "turbo db:generate",
-    "db:push": "turbo db:push",
-    "dev": "turbo dev --parallel",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "lint": "turbo lint",
-    "type-check": "turbo type-check"
+    "db:push": "turbo db:push"
   },
   "dependencies": {
     "@algolia/autocomplete-core": "^1.7.4",
