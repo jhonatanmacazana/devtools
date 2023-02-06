@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { signOut } from "next-auth/react";
 import { FaCog, FaSignOutAlt } from "react-icons/fa";
 

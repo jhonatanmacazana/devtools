@@ -1,5 +1,6 @@
-import NextLink, { LinkProps as NextLinkProps } from "next/link";
-import { ReactNode } from "react";
+import { clsx } from "clsx";
+import NextLink, { type LinkProps as NextLinkProps } from "next/link";
+import type { ReactNode } from "react";
 
 type LinkProps =
   | ({
@@ -33,7 +34,7 @@ export const Link = ({ children, className, href, isExternal, ...nextLinkProps }
 
 export const StyledLink = ({ children, className, href, ...linkProps }: LinkProps) => {
   return (
-    <Link className={`text-[#0079ff] no-underline ${className}`} href={href} {...linkProps}>
+    <Link className={clsx("text-[#0079ff] no-underline", className)} href={href} {...linkProps}>
       {children}
     </Link>
   );

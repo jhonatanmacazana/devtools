@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
 import type { GetServerSidePropsContext, InferGetServerSidePropsType, NextPage } from "next";

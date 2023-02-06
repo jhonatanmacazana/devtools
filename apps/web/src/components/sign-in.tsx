@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { signIn } from "next-auth/react";
 import { FaGithub } from "react-icons/fa";
 
