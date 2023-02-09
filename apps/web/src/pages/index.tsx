@@ -1,75 +1,9 @@
 /* eslint-disable */
 import type { GetServerSidePropsContext, NextPage } from "next";
 import Head from "next/head";
-import { useRouter } from "next/router";
-import { useSession } from "next-auth/react";
-import { formatRelative } from "date-fns";
+import Link from "next/link";
 
-import { SignIn } from "@/components/sign-in";
-import { NavButtons } from "@/components/nav-buttons";
 import { getServerSession } from "@devtools/auth";
-import { api } from "@/utils/api";
-
-const RepositoriesView = () => {
-  const router = useRouter();
-  const repos = api.github.getRepos.useQuery();
-  return (
-    <div className="w-full px-4 py-4 shadow-lg">
-      <h2 className="text-xl font-semibold">Available Repositories</h2>
-      <div className="flex w-full items-center justify-center pt-6 text-lg">
-        {repos.data ? (
-          <div className="flex w-full flex-wrap gap-2">
-            {repos.data.map((repo) => (
-              // eslint-disable-next-line react/no-unknown-property
-              <div className="flex items-center gap-2 px-3 py-2 shadow" key={repo.id}>
-                <span>{repo.full_name}</span>
-
-                {repo.updated_at && (
-                  <span className="text-sm">
-                    Updated {formatRelative(new Date(repo.updated_at), new Date())}
-                  </span>
-                )}
-
-                <button
-                  className="ease rounded bg-cyan-300 px-2 py-1 text-sm transition duration-300 hover:bg-cyan-400"
-                  onClick={() => router.push(`/pr?owner=${repo.owner.login}&repo=${repo.name}`)}
-                >
-                  Create PRs
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>Loading..</p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const HomeContent = () => {
-  const { data: sesh } = useSession();
-
-  if (!sesh) {
-    return <SignIn />;
-  }
-
-  return (
-    <div className="flex min-h-0 w-full flex-1 flex-col">
-      <div className="flex w-full items-center justify-between py-4 px-8 shadow">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          {sesh.user?.image && (
-            <img src={sesh.user?.image} alt="pro pic" className="w-16 rounded-full" />
-          )}
-          {sesh.user?.name}
-        </h1>
-        <NavButtons />
-      </div>
-
-      <RepositoriesView />
-    </div>
-  );
-};
 
 const Home: NextPage = () => {
   return (
@@ -85,7 +19,34 @@ const Home: NextPage = () => {
           Devtools
         </h1>
 
-        <HomeContent />
+        <p className="text-2xl">DevOps tools for ease of use</p>
+
+        <div className="pt-20" />
+
+        <div className="flex min-h-0 w-full flex-1 flex-col">
+          <ul className="grid w-full grid-cols-2 place-items-center items-center justify-between gap-6">
+            {[
+              {
+                label: "PRs",
+                href: "/pr",
+                description: "Create PRs for Github repos",
+              },
+              {
+                label: "Compose File Generator",
+                href: "/compose",
+                description: "Generate compose files",
+              },
+            ].map((link) => (
+              <Link href={link.href} key={link.label}>
+                <li className="h-32 w-80 items-center justify-between py-4 px-8 shadow hover:bg-gray-100">
+                  <h3 className="text-xl font-semibold">{link.label}</h3>
+
+                  <p className="text-sm">{link.description}</p>
+                </li>
+              </Link>
+            ))}
+          </ul>
+        </div>
       </main>
     </>
   );
